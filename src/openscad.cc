@@ -702,6 +702,9 @@ int gui(vector<string> &inputFiles, const fs::path &original_path, int argc, cha
 	// the screen retrace interval causing them to queue up.
 	// (see https://bugreports.qt-project.org/browse/QTBUG-39370
 	fmt.setSwapInterval(0);
+	fmt.setAlpha(true); 
+	fmt.setAlphaBufferSize(8);
+	
 	QGLFormat::setDefaultFormat(fmt);
 
 	set_render_color_scheme(arg_colorscheme, false);

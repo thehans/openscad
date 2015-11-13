@@ -159,7 +159,7 @@ void GLView::paintGL()
 
   Color4f bgcol = ColorMap::getColor(*this->colorscheme, BACKGROUND_COLOR);
   Color4f axescolor = ColorMap::getColor(*this->colorscheme, AXES_COLOR);
-  glClearColor(bgcol[0], bgcol[1], bgcol[2], 1.0);
+  glClearColor(bgcol[0], bgcol[1], bgcol[2], bgcol[3]);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
   setupCamera();
