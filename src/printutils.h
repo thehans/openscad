@@ -72,9 +72,6 @@ void PRINTDEBUG(const std::string &filename,const std::string &msg);
 #define PRINTD(_arg) do { PRINTDEBUG(std::string(__FILE__),_arg); } while (0)
 #define PRINTDB(_fmt, _arg) do { try { PRINTDEBUG(std::string(__FILE__),str(boost::format(_fmt) % _arg)); } catch(const boost::io::format_error &e) { PRINTDEBUG(std::string(__FILE__),"bad PRINTDB usage"); } } while (0)
 
-std::string two_digit_exp_format( std::string doublestr );
-std::string two_digit_exp_format( double x );
-
 // extremely simple logging, eventually replace with something like boost.log
 // usage: logstream out(5); openscad_loglevel=6; out << "hi";
 static int openscad_loglevel = 0;
