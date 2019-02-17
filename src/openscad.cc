@@ -108,10 +108,9 @@ public:
 	}
 };
 
-static void help(const char *arg0, const po::options_description &desc, bool failure = false)
+static void help(const std::string &program, const po::options_description &desc, bool failure = false)
 {
-	const fs::path progpath(arg0);
-	PRINTB("Usage: %s [options] file.scad\n%s", progpath.filename().string() % STR(desc));
+	PRINTB("Usage: %s [options] file.scad\n%s", program % STR(desc));
 	exit(failure ? 1 : 0);
 }
 
@@ -835,17 +834,28 @@ bool flagConvert(std::string str){
 }
 
 #ifdef _WIN32
+// Windows requires alternate "wmain" for unicode support
 int wmain(int argc, wchar_t **argv)
 #else
 int main(int argc, char **argv)
 #endif
 {
 	int rc = 0;
+	const fs::path progpath(argv[0]);
+	const std::string program_name = progpath.filename().string();
 	StackCheck::inst()->init();
 
 #ifdef OPENSCAD_QTGUI
 	{   // Need a dummy app instance to get the application path but it needs to be destroyed before the GUI is launched.
+	#ifdef _WIN32
+		// Can't send wchar_t to QCoreApplication QTBUG-3200
+		// QT uses GetModuleFilePath anyways, don't need args
+		int dum_argc = 0; 
+		char **dum_argv = nullptr;
+		QCoreApplication app(dum_argc, dum_argv); 
+	#else
 		QCoreApplication app(argc, argv);
+	#endif
 		PlatformUtils::registerApplicationPath(app.applicationDirPath().toLocal8Bit().constData());
 	}
 #else
@@ -930,11 +940,15 @@ int main(int argc, char **argv)
 
 	po::variables_map vm;
 	try {
-		po::store(po::command_line_parser(argc, argv).options(all_options).positional(p).extra_parser(customSyntax).run(), vm);
+		#ifdef _WIN32
+			po::store(po::wcommand_line_parser(argc, argv).options(all_options).positional(p).extra_parser(customSyntax).run(), vm);
+		#else
+			po::store(po::command_line_parser(argc, argv).options(all_options).positional(p).extra_parser(customSyntax).run(), vm);
+		#endif
 	}
 	catch(const std::exception &e) { // Catches e.g. unknown options
 		PRINTB("%s\n", e.what());
-		help(argv[0], desc, true);
+		help(program_name, desc, true);
 	}
 
 	OpenSCAD::debug = "";
@@ -965,7 +979,7 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	if (vm.count("help")) help(argv[0], desc);
+	if (vm.count("help")) help(program_name, desc);
 	if (vm.count("version")) version();
 	if (vm.count("info")) arg_info = true;
 
@@ -997,25 +1011,25 @@ int main(int argc, char **argv)
 
 	if (vm.count("o")) {
 		// FIXME: Allow for multiple output files?
-		if (output_file) help(argv[0], desc, true);
+		if (output_file) help(program_name, desc, true);
 		output_file = vm["o"].as<string>().c_str();
 	}
 	if (vm.count("s")) {
 		printDeprecation("The -s option is deprecated. Use -o instead.\n");
-		if (output_file) help(argv[0], desc, true);
+		if (output_file) help(program_name, desc, true);
 		output_file = vm["s"].as<string>().c_str();
 	}
 	if (vm.count("x")) {
 		printDeprecation("The -x option is deprecated. Use -o instead.\n");
-		if (output_file) help(argv[0], desc, true);
+		if (output_file) help(program_name, desc, true);
 		output_file = vm["x"].as<string>().c_str();
 	}
 	if (vm.count("d")) {
-		if (deps_output_file) help(argv[0], desc, true);
+		if (deps_output_file) help(program_name, desc, true);
 		deps_output_file = vm["d"].as<string>().c_str();
 	}
 	if (vm.count("m")) {
-		if (make_command) help(argv[0], desc, true);
+		if (make_command) help(program_name, desc, true);
 		make_command = vm["m"].as<string>().c_str();
 	}
 
@@ -1038,22 +1052,22 @@ int main(int argc, char **argv)
 	
 	if (Feature::ExperimentalCustomizer.is_enabled()) {
 		if (vm.count("p")) {
-			if (!parameterFile.empty()) help(argv[0], desc, true);
+			if (!parameterFile.empty()) help(program_name, desc, true);
 			
 			parameterFile = vm["p"].as<string>().c_str();
 		}
 		
 		if (vm.count("P")) {
-			if (!parameterSet.empty()) help(argv[0], desc, true);
+			if (!parameterSet.empty()) help(program_name, desc, true);
 			
 			parameterSet = vm["P"].as<string>().c_str();
 		}
 	}
 	else {
 		if (vm.count("p") || vm.count("P")) {
-			if (!parameterSet.empty()) help(argv[0], desc, true);
+			if (!parameterSet.empty()) help(program_name, desc, true);
 			PRINT("Customizer feature not activated\n");
-			help(argv[0], desc, true);
+			help(program_name, desc, true);
 		}
 	}
 	
@@ -1073,11 +1087,11 @@ int main(int argc, char **argv)
 	auto cmdlinemode = false;
 	if (output_file) { // cmd-line mode
 		cmdlinemode = true;
-		if (!inputFiles.size()) help(argv[0], desc, true);
+		if (!inputFiles.size()) help(program_name, desc, true);
 	}
 
 	if (arg_info || cmdlinemode) {
-		if (inputFiles.size() > 1) help(argv[0], desc, true);
+		if (inputFiles.size() > 1) help(program_name, desc, true);
 		try {
 			parser_init();
 			localization_init();
@@ -1092,11 +1106,15 @@ int main(int argc, char **argv)
 		}
 	}
 	else if (QtUseGUI()) {
+		#ifdef _WIN32
+		rc = gui(inputFiles, original_path, 0, nullptr);
+		#else
 		rc = gui(inputFiles, original_path, argc, argv);
+		#endif
 	}
 	else {
 		PRINT("Requested GUI mode but can't open display!\n");
-		help(argv[0], desc, true);
+		help(program_name, desc, true);
 	}
 
 	Builtins::instance(true);
