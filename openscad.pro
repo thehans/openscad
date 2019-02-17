@@ -103,6 +103,8 @@ win* {
   RC_FILE = openscad_win32.rc
   QMAKE_CXXFLAGS += -DNOGDI
   QMAKE_LFLAGS += -Wl,--stack,$$STACKSIZE
+  # Tell linker to use unicode versions of system calls etc.
+  QMAKE_LFLAGS += -municode
 }
 
 mingw* {
