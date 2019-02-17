@@ -100,7 +100,7 @@ static DWORD WINAPI watchdog(LPVOID arg) {
 #define IS_WHITESPACE(c) (' ' == (c) || '\t' == (c))
 #define MAXCMDLEN 32768 /* MS Windows limit */
 
-int main(int argc, char *argv[]) {
+int wmain(int argc, wchar_t *argv[]) {
 	HANDLE hWrite, curr_proc;
 	SECURITY_ATTRIBUTES sa;
 	WATCH_INFO info;
@@ -130,9 +130,9 @@ int main(int argc, char *argv[]) {
 
 	// look for '-o -' combination
 	for (preserve_stdout=FALSE, i=/*sic!*/2; i<argc; ++i) {
-		register char *s = argv[i];
-		if ('-' == s[0] && '\0' == s[1]) // it is "-"
-			if (!strcmp("-o", argv[i-1])) {
+		register wchar_t *s = argv[i];
+		if (L'-' == s[0] && L'\0' == s[1]) // it is "-"
+			if (!wcscmp(L"-o", argv[i-1])) {
 				preserve_stdout = TRUE; break;
 			}
 	}

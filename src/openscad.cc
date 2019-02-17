@@ -834,7 +834,11 @@ bool flagConvert(std::string str){
 	return false;
 }
 
+#ifdef _WIN32
+int wmain(int argc, wchar_t **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
 	int rc = 0;
 	StackCheck::inst()->init();
