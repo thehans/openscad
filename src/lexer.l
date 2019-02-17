@@ -297,7 +297,7 @@ void includefile()
   }
   else {
     rootmodule->registerInclude(localpath.generic_string(), localpath.generic_string());
-    PRINTB("WARNING: Can't open include file '%s'.", localpath.generic_string());
+    PRINTB("WARNING: Can't find include file '%s'.", localpath.generic_string());
     return;
   };
 

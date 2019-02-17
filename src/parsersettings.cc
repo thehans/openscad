@@ -34,31 +34,32 @@ fs::path search_libs(const fs::path &localpath)
 static bool check_valid(const fs::path &p, const std::vector<std::string> *openfilenames)
 {
 	if (p.empty()) {
-		//PRINTB("WARNING: File path is blank: %s",p);
+		PRINTB("WARNING: File path is blank: %s",p);
 		return false;
 	}
 	if (!p.has_parent_path()) {
-		//PRINTB("WARNING: No parent path: %s",p);
+		PRINTB("WARNING: No parent path: %s",p);
 		return false;
 	}
-	if (!fs::exists(p)) {
-		//PRINTB("WARNING: File not found: %s",p);
+	if (!fs::exists(p.generic_string())) {
+		PRINTB("WARNING: File not found: %s",p);
 		return false;
 	}
-	if (fs::is_directory(p)) {
-		//PRINTB("WARNING: %s invalid - points to a directory",p);
+	if (fs::is_directory(p.generic_string())) {
+		PRINTB("WARNING: %s invalid - points to a directory",p);
 		return false;
 	}
 	std::string fullname = p.generic_string();
-  // Detect circular includes
+    // Detect circular includes
 	if (openfilenames) {
 		for(const auto &s : *openfilenames) {
 			if (s == fullname) {
-//				PRINTB("WARNING: circular include file %s", fullname);
+				PRINTB("WARNING: circular include file %s", fullname);
 				return false;
 			}
 		}
 	}
+	PRINTB("Valid path %s", p.generic_string());
 	return true;
 }
 
@@ -76,14 +77,25 @@ fs::path find_valid_path(const fs::path &sourcepath,
 												 const std::vector<std::string> *openfilenames)
 {
 	if (localpath.is_absolute()) {
+		PRINTB("Absolute path %s", localpath.generic_string());
 		if (check_valid(localpath, openfilenames)) return boosty::canonical(localpath);
+		PRINTB("Absolute path not valid %s", localpath.generic_string());
 	}
 	else {
+		PRINTB("Relative path %s", localpath.generic_string());
 		fs::path fpath = sourcepath / localpath;
-		if (fs::exists(fpath)) fpath = boosty::canonical(fpath);
+		if (fs::exists(fpath.generic_string())) {
+			fpath = boosty::canonical(fpath);
+			PRINTB("Found file %s", fpath.generic_string());
+		}
+		PRINTB("Doesn't exist %s", fpath.generic_string());
+
 		if (check_valid(fpath, openfilenames)) return fpath;
+		PRINTB("Not Valid %s", fpath.generic_string());
+
 		fpath = search_libs(localpath);
 		if (!fpath.empty() && check_valid(fpath, openfilenames)) return fpath;
+		PRINTB("Empty path or not valid %s", fpath.generic_string());
 	}
 	return fs::path();
 }

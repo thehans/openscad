@@ -1032,7 +1032,7 @@ void MainWindow::refreshDocument()
 			QTextStream reader(&file);
 			reader.setCodec("UTF-8");
 			auto text = reader.readAll();
-			PRINTB("Loaded design '%s'.", this->fileName.toLocal8Bit().constData());
+			PRINTB("Loaded design '%s'.", this->fileName.toStdString());
 			if (editor->toPlainText() != text) {
 				editor->setPlainText(text);
 				setContentsChanged();
