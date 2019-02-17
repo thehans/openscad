@@ -3,6 +3,10 @@
 #include "boosty.h"
 #include <boost/algorithm/string.hpp>
 #include "PlatformUtils.h"
+#include <windows.h>
+#include <locale>
+#include <codecvt>
+
 
 namespace fs = boost::filesystem;
 
@@ -41,11 +45,12 @@ static bool check_valid(const fs::path &p, const std::vector<std::string> *openf
 		PRINTB("WARNING: No parent path: %s",p);
 		return false;
 	}
-	if (!fs::exists(p.generic_string())) {
-		PRINTB("WARNING: File not found: %s",p);
+	boost::system::error_code c;
+	if (!fs::exists(p, c)) {
+		PRINTB("WARNING: File not found: (%d %s) %s ", c % (AreFileApisANSI() ? "ANSI" : "PANTSY") % p );
 		return false;
 	}
-	if (fs::is_directory(p.generic_string())) {
+	if (fs::is_directory(p)) {
 		PRINTB("WARNING: %s invalid - points to a directory",p);
 		return false;
 	}
@@ -84,11 +89,16 @@ fs::path find_valid_path(const fs::path &sourcepath,
 	else {
 		PRINTB("Relative path %s", localpath.generic_string());
 		fs::path fpath = sourcepath / localpath;
-		if (fs::exists(fpath.generic_string())) {
+
+
+		std::locale bak = fs::path::imbue( std::locale( std::locale(), new std::codecvt_utf8<wchar_t>() ) );
+		boost::system::error_code c;
+		if (fs::exists(fpath, c)) {
 			fpath = boosty::canonical(fpath);
 			PRINTB("Found file %s", fpath.generic_string());
 		}
-		PRINTB("Doesn't exist %s", fpath.generic_string());
+		fs::path::imbue(bak);
+		PRINTB("Doesn't exist %s %d", fpath.generic_string() % c);
 
 		if (check_valid(fpath, openfilenames)) return fpath;
 		PRINTB("Not Valid %s", fpath.generic_string());
