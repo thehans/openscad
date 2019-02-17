@@ -853,6 +853,7 @@ int main(int argc, char **argv)
 	if (isGuiLaunched) set_output_handler(CocoaUtils::nslog, nullptr);
 #else
 	PlatformUtils::ensureStdIO();
+	PlatformUtils::configureFileApis();
 #endif
 
 #ifdef ENABLE_CGAL

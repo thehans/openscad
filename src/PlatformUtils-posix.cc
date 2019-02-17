@@ -274,3 +274,4 @@ const std::string PlatformUtils::sysinfo(bool extended)
 }
 
 void PlatformUtils::ensureStdIO(void) {}
+void PlatformUtils::configureFileApis(void) {}

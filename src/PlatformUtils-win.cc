@@ -216,3 +216,7 @@ void PlatformUtils::ensureStdIO(void)
 	std::ios_base::sync_with_stdio();
 }
 
+void PlatformUtils::configureFileApis(void)
+{
+	SetFileApisToOEM();
+}

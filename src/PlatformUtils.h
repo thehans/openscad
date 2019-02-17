@@ -110,6 +110,11 @@ namespace PlatformUtils {
 	 */
 	void ensureStdIO(void);
         
+	/* 
+	 * Windows defaults to ANSI filenames, need to enable UTF8 support
+	 */
+	void configureFileApis(void);
+        
         /**
          * Convert the number of bytes to a human readable string with
          * a given number of digits.
