@@ -109,6 +109,7 @@ int main(int argc, char *argv[]) {
 	int result = 0;
 	register int i;
 	/*bool*/ int quote, preserve_stdout;
+	SetFileApisToOEM();
 	register wchar_t *cmdline = GetCommandLineW();
 	// Look for the end of executable
 	// There is no need to check for escaped double quotes here
