@@ -673,7 +673,7 @@ int main(int argc, char *argv[])
     else {
       std::stringstream ss;
       ss << "out" << idx++ << ".stl";
-      exportFileByName(shared_ptr<const Geometry>(result_ps), OPENSCAD_STL, ss.str().c_str(), ss.str().c_str());
+      exportFileByName(shared_ptr<const Geometry>(result_ps), OPENSCAD_STL, ss.str().c_str());
       std::cout << "color([" << colors[idx%147][0] << "," << colors[idx%147][1] << "," << colors[idx%147][2] << "]) " << "import(\"" << ss.str() << "\");\n";
     }
   }

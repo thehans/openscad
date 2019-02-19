@@ -923,7 +923,7 @@ void MainWindow::setFileName(const QString &filename)
 			this->parameterWidget->readFile(this->fileName);
 		}
 		QDir::setCurrent(fileinfo.dir().absolutePath());
-		this->top_ctx.setDocumentPath(fileinfo.dir().absolutePath().toLocal8Bit().constData());
+		this->top_ctx.setDocumentPath(fileinfo.dir().absolutePath().toStdString());
 	}
 	editorTopLevelChanged(editorDock->isFloating());
 	consoleTopLevelChanged(consoleDock->isFloating());
@@ -1026,13 +1026,13 @@ void MainWindow::refreshDocument()
 		QFile file(this->fileName);
 		if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 			PRINTB("Failed to open file %s: %s",
-						 this->fileName.toLocal8Bit().constData() % file.errorString().toLocal8Bit().constData());
+						 this->fileName.toStdString() % file.errorString().toStdString());
 		}
 		else {
 			QTextStream reader(&file);
 			reader.setCodec("UTF-8");
 			auto text = reader.readAll();
-			PRINTB("Loaded design '%s'.", this->fileName.toLocal8Bit().constData());
+			PRINTB("Loaded design '%s'.", this->fileName.toStdString());
 			if (editor->toPlainText() != text) {
 				editor->setPlainText(text);
 				setContentsChanged();
@@ -1512,7 +1512,7 @@ void MainWindow::writeBackup(QFile *file)
 		this->parameterWidget->writeBackupFile(file->fileName());
 	}
 	
-	PRINTB("Saved backup file: %s", file->fileName().toUtf8().constData());
+	PRINTB("Saved backup file: %s", file->fileName().toStdString());
 }
 
 void MainWindow::saveBackup()
@@ -1523,7 +1523,7 @@ void MainWindow::saveBackup()
 		return;
 	}
 
-	auto backupPath = QString::fromLocal8Bit(path.c_str());
+	auto backupPath = QString::fromStdString(path);
 	if (!backupPath.endsWith("/")) backupPath.append("/");
 
 	QString basename = "unsaved";
@@ -1546,8 +1546,8 @@ void MainWindow::saveBackup()
 void MainWindow::saveError(const QIODevice &file, const std::string &msg)
 {
 	const std::string messageFormat = msg + " %s (%s)";
-	const char *fileName = this->fileName.toLocal8Bit().constData();
-	PRINTB(messageFormat.c_str(), fileName % file.errorString().toLocal8Bit().constData());
+	const char *fileName = this->fileName.toUtf8();
+	PRINTB(messageFormat.c_str(), fileName % file.errorString().toStdString());
 
 	const std::string dialogFormatStr = msg + "\n\"%1\"\n(%2)";
 	const QString dialogFormat(dialogFormatStr.c_str());
@@ -1586,7 +1586,7 @@ void MainWindow::actionSave()
 		bool saveOk = writer.status() == QTextStream::Ok;
 		QT_FILE_SAVE_COMMIT;
 		if (saveOk) {
-			PRINTB(_("Saved design '%s'."), this->fileName.toLocal8Bit().constData());
+			PRINTB(_("Saved design '%s'."), this->fileName.toStdString());
 			this->editor->setContentModified(false);
 		} else {
 			saveError(file, _("Error saving design"));
@@ -1893,7 +1893,7 @@ bool MainWindow::fileChangedOnDisk()
 	if (!this->fileName.isEmpty()) {
 		struct stat st;
 		memset(&st, 0, sizeof(struct stat));
-		bool valid = (stat(this->fileName.toLocal8Bit(), &st) == 0);
+		bool valid = (stat(this->fileName.toUtf8().constData(), &st) == 0);
 		// If file isn't there, just return and use current editor text
 		if (!valid) return false;
 
@@ -1921,11 +1921,11 @@ void MainWindow::compileTopLevelDocument(bool rebuildParameterWidget)
 	this->last_compiled_doc = editor->toPlainText();
 
 	auto fulltext =
-		std::string(this->last_compiled_doc.toUtf8().constData()) +
+		this->last_compiled_doc.toStdString() +
 		"\n\x03\n" + commandline_commands;
 	
-	auto fnameba = this->fileName.toLocal8Bit();
-	const char* fname = this->fileName.isEmpty() ? "" : fnameba;
+	auto fnameba = this->fileName.toStdString();
+	const auto fname = this->fileName.isEmpty() ? "" : fnameba;
 	delete this->parsed_module;
 	this->root_module = parse(this->parsed_module, fulltext, fname, fname, false) ? this->parsed_module : nullptr;
 
@@ -2158,7 +2158,7 @@ void MainWindow::sendToOctoPrint()
 		userFileName = fileInfo.baseName() + "." + fileFormat.toLower();
 	}
 
-	exportFileByName(this->root_geom, exportFileFormat, exportFileName.toLocal8Bit().constData(), exportFileName.toUtf8());
+	exportFileByName(this->root_geom, exportFileFormat, exportFileName.toUtf8().constData());
 
 	try {
 		this->progresswidget = new ProgressWidget(this);
@@ -2197,7 +2197,7 @@ void MainWindow::sendToPrintService()
 	const QString exportFilename = exportFile.fileName();
 	
 	//Render the stl to a temporary file:
-	exportFileByName(this->root_geom, FileFormat::STL, exportFilename.toLocal8Bit().constData(), exportFilename.toUtf8());
+	exportFileByName(this->root_geom, FileFormat::STL, exportFilename.toUtf8().constData());
 
 	//Create a name that the order process will use to refer to the file. Base it off of the project name
 	QString userFacingName = "unsaved.stl";
@@ -2390,7 +2390,7 @@ void MainWindow::actionDisplayAST()
 	e->setWindowTitle("AST Dump");
 	e->setReadOnly(true);
 	if (root_module) {
-		e->setPlainText(QString::fromUtf8(root_module->dump("").c_str()));
+		e->setPlainText(QString::fromStdString(root_module->dump("")));
 	} else {
 		e->setPlainText("No AST to dump. Please try compiling first...");
 	}
@@ -2408,7 +2408,7 @@ void MainWindow::actionDisplayCSGTree()
 	e->setWindowTitle("CSG Tree Dump");
 	e->setReadOnly(true);
 	if (this->root_node) {
-		e->setPlainText(QString::fromUtf8(this->tree.getString(*this->root_node, "  ").c_str()));
+		e->setPlainText(QString::fromStdString(this->tree.getString(*this->root_node, "  ")));
 	} else {
 		e->setPlainText("No CSG to dump. Please try compiling first...");
 	}
@@ -2536,10 +2536,9 @@ void MainWindow::actionExport(FileFormat format, const char *type_name, const ch
 	}
 	this->export_paths[suffix] = exportFilename;
 	exportFileByName(this->root_geom, format,
-		exportFilename.toLocal8Bit().constData(),
-		exportFilename.toUtf8());
+		exportFilename.toUtf8().constData());
 	PRINTB("%s export finished: %s",
-		type_name % exportFilename.toUtf8().constData());
+		type_name % exportFilename.toStdString());
 
 	clearCurrentOutput();
 #endif /* ENABLE_CGAL */
@@ -2593,9 +2592,9 @@ void MainWindow::actionExportCSG()
 		return;
 	}
 
-	std::ofstream fstream(csg_filename.toLocal8Bit());
+	std::ofstream fstream(csg_filename.toStdString());
 	if (!fstream.is_open()) {
-		PRINTB("Can't open file \"%s\" for export", csg_filename.toLocal8Bit().constData());
+		PRINTB("Can't open file \"%s\" for export", csg_filename.toStdString());
 	}
 	else {
 		fstream << this->tree.getString(*this->root_node, "\t") << "\n";
@@ -2617,7 +2616,7 @@ void MainWindow::actionExportImage()
 	auto img_filename = QFileDialog::getSaveFileName(this,
 			_("Export Image"),  exportPath(suffix), _("PNG Files (*.png)"));
 	if (!img_filename.isEmpty()) {
-		qglview->save(img_filename.toLocal8Bit().constData());
+		qglview->save(img_filename.toUtf8().constData());
 		this->export_paths[suffix] = img_filename;
 	}
 

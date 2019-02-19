@@ -245,7 +245,7 @@ static bool checkAndExport(shared_ptr<const Geometry> root_geom, unsigned nd,
 		PRINT("Current top level object is empty.");
 		return false;
 	}
-	exportFileByName(root_geom, format, filename, filename);
+	exportFileByName(root_geom, format, filename);
 	return true;
 }
 
@@ -566,8 +566,8 @@ Q_DECLARE_METATYPE(shared_ptr<const Geometry>);
 static QString assemblePath(const fs::path& absoluteBaseDir,
                             const string& fileName) {
   if (fileName.empty()) return "";
-  auto qsDir = QString::fromLocal8Bit(absoluteBaseDir.generic_string().c_str());
-  auto qsFile = QString::fromLocal8Bit(fileName.c_str());
+  auto qsDir = QString::fromStdString(absoluteBaseDir.generic_string());
+  auto qsFile = QString::fromStdString(fileName);
   // if qsfile is absolute, dir is ignored. (see documentation of QFileInfo)
   QFileInfo info(qsDir, qsFile);
   return info.absoluteFilePath();
@@ -842,18 +842,13 @@ int main(int argc, char **argv)
 #ifdef OPENSCAD_QTGUI
 	{   // Need a dummy app instance to get the application path but it needs to be destroyed before the GUI is launched.
 		QCoreApplication app(argc, argv);
-		PlatformUtils::registerApplicationPath(app.applicationDirPath().toLocal8Bit().constData());
+		PlatformUtils::registerApplicationPath(app.applicationDirPath().toStdString());
 	}
 #else
 	PlatformUtils::registerApplicationPath(fs::absolute(boost::filesystem::path(argv[0]).parent_path()).generic_string());
 #endif
 	
-#ifdef Q_OS_MAC
-	bool isGuiLaunched = getenv("GUI_LAUNCHED") != nullptr;
-	if (isGuiLaunched) set_output_handler(CocoaUtils::nslog, nullptr);
-#else
-	PlatformUtils::ensureStdIO();
-#endif
+	PlatformUtils::initPlatform();
 
 #ifdef ENABLE_CGAL
 	// Causes CGAL errors to abort directly instead of throwing exceptions
