@@ -18,7 +18,8 @@ bool OpenSCAD::hardwarnings = false;
 bool OpenSCAD::parameterCheck = true;
 bool OpenSCAD::rangeCheck = false;
 
-boost::circular_buffer<std::string> lastmessages(5);
+std::string lastmessage;
+int lastmessage_count = 0;
 
 void set_output_handler(OutputHandlerFunc *newhandler, void *userdata)
 {
@@ -60,12 +61,14 @@ void PRINT_NOCACHE(const std::string &msg)
 	if (msg.empty()) return;
 
 	if (boost::starts_with(msg, "WARNING") || boost::starts_with(msg, "ERROR") || boost::starts_with(msg, "TRACE")) {
-		size_t i;
-		for (i=0;i<lastmessages.size();i++) {
-			if (lastmessages[i] != msg) break;
+		if (lastmessage == msg) {
+			// Suppress output after 5 equal ERROR or WARNING outputs.
+			if (lastmessage_count == 5) return; 
+			++lastmessage_count;
+		} else {
+			lastmessage_count = 1;
+			lastmessage = msg;
 		}
-		if (i == 5) return; // Suppress output after 5 equal ERROR or WARNING outputs.
-		else lastmessages.push_back(msg);
 	}
 
 	if (!OpenSCAD::quiet || boost::starts_with(msg, "ERROR")) {
@@ -128,5 +131,6 @@ void printDeprecation(const std::string &str)
 void resetSuppressedMessages()
 {
 	printedDeprecations.clear();
-	lastmessages.clear();
+	lastmessage = "";
+	lastmessage_count = 0;
 }
