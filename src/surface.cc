@@ -50,6 +50,9 @@ using namespace boost::assign; // bring 'operator+=()' into scope
 #include <boost/filesystem.hpp>
 namespace fs = boost::filesystem;
 
+#include "double-conversion/double-conversion.h"
+namespace dc = double_conversion;
+
 class SurfaceModule : public AbstractModule
 {
 public:
@@ -162,6 +165,9 @@ img_data_t SurfaceNode::read_dat(std::string filename) const
 {
 	img_data_t data;
 	std::ifstream stream(filename.c_str());
+	const static double errVal = -444.444e-44;
+	dc::StringToDoubleConverter double_convert(dc::StringToDoubleConverter::NO_FLAGS,errVal,errVal,NULL,NULL);
+	int dc_processed_chars;
 
 	if (!stream.good()) {
 		PRINTB("WARNING: Can't open DAT file '%s'.", filename);
@@ -183,10 +189,10 @@ img_data_t SurfaceNode::read_dat(std::string filename) const
 		if (line.size() == 0 && stream.eof()) break;
 
 		int col = 0;
-		tokenizer tokens(line, sep);
+		tokenizer tokens{line, sep};
 		try {
 			for(const auto &token : tokens) {
-				auto v = boost::lexical_cast<double>(token);
+				auto v = double_convert.StringToDouble(token.c_str(), token.size(), &dc_processed_chars);
 				data[std::make_pair(lines, col++)] = v;
 				if (col > columns) columns = col;
 				min_val = std::min(v-1, min_val);

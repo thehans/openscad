@@ -6,8 +6,16 @@
     #include "value.h"  
     #include "comment_parser.hxx"
     #include <boost/lexical_cast.hpp>
+    #include "double-conversion/double-conversion.h"
+    namespace dc = double_conversion;
+
     YY_BUFFER_STATE yy_scan_string ( const char *str ) ;
     std::string stringcon;
+
+    const double errval = -222.222e-22;
+    dc::StringToDoubleConverter comment_lexer_dc(dc::StringToDoubleConverter::NO_FLAGS, 
+                                        errval , errval, NULL, NULL);
+    int comment_lexer_dc_processed_chars;
 %}
 
 
@@ -27,11 +35,9 @@ UNICODE {U2}{U}|{U3}{U}{U}|{U4}{U}{U}{U}
 [+-]?{D}+{E}? |
 [+-]?{D}*\.{D}+{E}? |
 [+-]?{D}+\.{D}*{E}? {
-                    try {
-                        comment_parserlval.num = boost::lexical_cast<double>(yytext);
+                        comment_parserlval.num = comment_lexer_dc.StringToDouble(yytext, yyleng, &comment_lexer_dc_processed_chars);
                         return NUM;
-                    } catch (boost::bad_lexical_cast&) {}
-                }
+                    }
                 
 "[" { return yytext[0];}
 "]" { return yytext[0];}

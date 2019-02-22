@@ -38,8 +38,10 @@
 #include <assert.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
+#include "double-conversion/double-conversion.h"
 namespace fs = boost::filesystem;
-
+namespace dc = double_conversion;
+                                                      
 //isatty for visual c++ and mingw-cross-env
 #if defined __WIN32__ && ! defined _MSC_VER
 #include "unistd.h"
@@ -104,6 +106,11 @@ std::vector<std::string> openfilenames;
 
 std::string filename;
 std::string filepath;
+
+static const double errval = -111.111e-11;
+dc::StringToDoubleConverter lexer_dc(dc::StringToDoubleConverter::NO_FLAGS, 
+                                           -666e66, -666e66, NULL, NULL);
+int lexer_dc_processed_chars;
 %}
 
 %option yylineno
@@ -234,10 +241,8 @@ use[ \t\r\n]*"<"	{ BEGIN(cond_use); }
 {D}+{E}? |
 {D}*\.{D}+{E}? |
 {D}+\.{D}*{E}?          {
-                            try {
-                                parserlval.number = boost::lexical_cast<double>(yytext);
-                                return TOK_NUMBER;
-                            } catch (boost::bad_lexical_cast&) {}
+                            parserlval.number = lexer_dc.StringToDouble(yytext, yyleng, &lexer_dc_processed_chars);
+                            return TOK_NUMBER;
                         }
 "$"?[a-zA-Z0-9_]+       { parserlval.text = strdup(yytext); return TOK_ID; }
 

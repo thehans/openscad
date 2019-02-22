@@ -7,6 +7,10 @@
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <fstream>
+#include "double-conversion/double-conversion.h"
+namespace dc = double_conversion;
+
+
 
 #define STL_FACET_NUMBYTES 4*3*4+2
 // as there is no 'float32_t' standard, we assume the systems 'float'
@@ -56,7 +60,9 @@ static void read_stl_facet(std::ifstream &f, stl_facet &facet)
 PolySet *import_stl(const std::string &filename, const Location &loc)
 {
 	PolySet *p = new PolySet(3);
-
+	const static double errVal = -333.333e-33;
+	dc::StringToDoubleConverter double_convert(dc::StringToDoubleConverter::NO_FLAGS,errVal,errVal,NULL,NULL);
+	int dc_processed_chars;
 	// Open file and position at the end
 	std::ifstream f(filename.c_str(), std::ios::in | std::ios::binary | std::ios::ate);
 	if (!f.good()) {
@@ -103,16 +109,18 @@ PolySet *import_stl(const std::string &filename, const Location &loc)
 			}
 			boost::smatch results;
 			if (boost::regex_search(line, results, ex_vertices)) {
-				try {
-					for (int v=0;v<3;v++) {
-						vdata[i][v] = boost::lexical_cast<double>(results[v+1]);
+			
+				for (int v=0;v<3;v++) {
+					const std::string vstr(std::move(results[v+1]));
+					if ( (vdata[i][v] = double_convert.StringToDouble(vstr.c_str(), vstr.size(), &dc_processed_chars))
+							== errVal) {
+						PRINTB("WARNING: Can't parse vertex line '%s', import() at line %d", line % loc.firstLine());
+						i = 10;
+						break;
 					}
+					
 				}
-				catch (const boost::bad_lexical_cast &blc) {
-					PRINTB("WARNING: Can't parse vertex line '%s', import() at line %d", line % loc.firstLine());
-					i = 10;
-					continue;
-				}
+				if (i==10) continue;
 				if (++i == 3) {
 					p->append_poly();
 					p->append_vertex(vdata[0][0], vdata[0][1], vdata[0][2]);
