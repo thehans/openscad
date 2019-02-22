@@ -148,8 +148,6 @@ int main(int argc, char **argv)
 
 	GeometryEvaluator geomevaluator(tree);
 
-	print_messages_push();
-
 	std::cout << "First evaluation:\n";
 	shared_ptr<const Geometry> geom = geomevaluator.evaluateGeometry(*root_node, true);
 	std::cout << "Second evaluation:\n";
@@ -158,9 +156,8 @@ int main(int argc, char **argv)
 	// Evaluate again to make cache kick in
 	// Record printed output and compare it
 	// Compare the polyhedrons
-  // Record cache statistics?
+  	// Record cache statistics?
 
-	print_messages_pop();
 	current_path(original_path);
 
 	Builtins::instance(true);

@@ -38,8 +38,6 @@ namespace OpenSCAD {
 void set_output_handler(OutputHandlerFunc *newhandler, void *userdata);
 
 extern std::list<std::string> print_messages_stack;
-void print_messages_push();
-void print_messages_pop();
 void printDeprecation(const std::string &str);
 void resetSuppressedMessages();
 

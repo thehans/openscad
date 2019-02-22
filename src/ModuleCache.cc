@@ -100,15 +100,11 @@ std::time_t ModuleCache::evaluate(const std::string &mainFile,const std::string 
 			text = STR(ifs.rdbuf() << "\n\x03\n" << commandline_commands);
 		}
 		
-		print_messages_push();
-		
 		delete cacheEntry.parsed_module;
 		lib_mod = parse(cacheEntry.parsed_module, text, filename, mainFile, false) ? cacheEntry.parsed_module : nullptr;
-		PRINTDB("  compiled module: %p", lib_mod);
+		PRINTDB("  compiled module: %p\n", lib_mod);
 		cacheEntry.module = lib_mod;
 		cacheEntry.cache_id = cache_id;
-		
-		print_messages_pop();
 	}
 	
 	module = lib_mod;
