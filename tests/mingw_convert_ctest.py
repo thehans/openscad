@@ -55,7 +55,7 @@ wintct=winbase+'/tests/test_cmdline_tool.py'
 linpy=mingw_cross_info.linux_python #'/usr/bin/python3'
 winpy=sys.executable
 
-executable = "openscad.com"
+executable = "openscad.exe"
 linosng=linbuild + '/' + executable
 winosng=winbuild + '\\' + executable
 

@@ -543,7 +543,7 @@ if [ $BUILD_TESTS ]; then
         # will confuse people who are on 64 bit machines
         TESTBUILDDIR=tests-build
         OPENSCAD_BINDIR="$DEPLOYDIR/openscad-$VERSION"
-        OPENSCAD_BINARY="$OPENSCAD_BINDIR/openscad.com"
+        OPENSCAD_BINARY="$OPENSCAD_BINDIR/openscad.exe"
         export OPENSCAD_BINARY
         cd $DEPLOYDIR
         mkdir $TESTBUILDDIR
