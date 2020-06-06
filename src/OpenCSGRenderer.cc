@@ -106,6 +106,7 @@ void OpenCSGRenderer::renderCSGProducts(const CSGProducts &products, GLint *shad
 		}
 		if (shaderinfo) glUseProgram(shaderinfo[0]);
 
+		glEnable(GL_CULL_FACE);
 		for(const auto &csgobj : product.intersections) {
 			const Color4f &c = csgobj.leaf->color;
 				csgmode_e csgmode = get_csgmode(highlight_mode, background_mode);
@@ -125,15 +126,18 @@ void OpenCSGRenderer::renderCSGProducts(const CSGProducts &products, GLint *shad
 			const Color4f c1 = setColor(colormode, c.data(), shaderinfo);
 			if (c1[3] == 1.0f) {
 				// object is opaque, draw normally
+				glCullFace(GL_BACK);
+				render_surface(csgobj.leaf->geom, csgmode, csgobj.leaf->matrix, shaderinfo);
+				// highlight back faces
+				glColor3ub(255, 0, 255);
+				glCullFace(GL_FRONT);
 				render_surface(csgobj.leaf->geom, csgmode, csgobj.leaf->matrix, shaderinfo);
 			} else {
 				// object is transparent, so draw rear faces first.  Issue #1496
-				glEnable(GL_CULL_FACE);
 				glCullFace(GL_FRONT);
 				render_surface(csgobj.leaf->geom, csgmode, csgobj.leaf->matrix, shaderinfo);
 				glCullFace(GL_BACK);
 				render_surface(csgobj.leaf->geom, csgmode, csgobj.leaf->matrix, shaderinfo);
-				glDisable(GL_CULL_FACE);
 			}
 
 			glPopMatrix();
@@ -155,12 +159,11 @@ void OpenCSGRenderer::renderCSGProducts(const CSGProducts &products, GLint *shad
 			glPushMatrix();
 			glMultMatrixd(csgobj.leaf->matrix.data());
 			// negative objects should only render rear faces
-			glEnable(GL_CULL_FACE);
 			glCullFace(GL_FRONT);
 			render_surface(csgobj.leaf->geom, csgmode, csgobj.leaf->matrix, shaderinfo);
-			glDisable(GL_CULL_FACE);
 			glPopMatrix();
 		}
+		glDisable(GL_CULL_FACE);
 
 		if (shaderinfo) glUseProgram(0);
 		for(auto &p : primitives) delete p;
