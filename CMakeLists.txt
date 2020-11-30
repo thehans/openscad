@@ -566,6 +566,7 @@ else()
     src/VBORenderer.cc
     src/CGALRenderer.cc
     src/GLView.cc
+    src/GLMemPool.cc
     src/OffscreenView.cc
     src/OpenCSGRenderer.cc
     src/ThrownTogetherRenderer.cc)
